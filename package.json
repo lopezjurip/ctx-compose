@@ -3,7 +3,7 @@
   "description": "Take off 'koa' from 'koa-compose' and make it universal.",
   "repository": "mrpatiwi/ctx-compose",
   "license": "MIT",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "main": "index.js",
   "keywords": [
     "async",
