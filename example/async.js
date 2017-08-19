@@ -16,6 +16,10 @@ async function increaser(ctx) {
 
 const context = { value: 4 };
 const middleware = [log, increaser];
-compose(middleware)(context).then(() => {
-  console.log("Value:", context.value);
-});
+compose(middleware)(context)
+  .then(() => {
+    console.log("Value:", context.value);
+  })
+  .catch(err => {
+    console.error(err);
+  });

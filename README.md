@@ -75,9 +75,13 @@ async function increaser(ctx) {
 
 const context = { value: 4 };
 const middleware = [log, increaser];
-compose(middleware)(context).then(() => {
-  console.log("Value:", context.value);
-});
+compose(middleware)(context)
+  .then(() => {
+    console.log("Value:", context.value);
+  })
+  .catch(err => {
+    console.error(err);
+  });
 ```
 
 ### Synchronous
@@ -99,8 +103,12 @@ function increaser(ctx) {
 
 const context = { value: 4 };
 const middleware = [log, increaser];
-composeSync(middleware)(context);
-console.log("Value:", context.value);
+try {
+  composeSync(middleware)(context);
+  console.log("Value:", context.value);
+} catch (err) {
+  console.error(err);
+}
 ```
 
 Console output:
@@ -111,27 +119,70 @@ Console output:
 Value: 5
 ```
 
-## Functional helper
+## Functional mode
 
-For convenience, you can use this wrapper that creates a shallow copy of the initial `context` object and return the final object as the result.
+For convenience, you can use this wrapper that creates a shallow copy of the `context` object before each layer of middleware (if needed) and return the final object as the result.
 
-**The context object between middlewares is still mutating**
+You can use a custom `copy` function as the second argument of `compose`. By default it uses:
+
+```js
+function copy(ctx) {
+  return Object.assign({}, ctx);
+}
+```
+
+### Asynchronous
 
 ```js
 const compose = require("ctx-compose/fp/async");
+const Bluebird = require("bluebird");
+
+async function log(ctx, next) {
+  console.log(">>>", ctx.value);
+  const nextCtx = await next();
+  console.log("<<<", nextCtx.value);
+  return nextCtx; // Explicit context return.
+}
+
+async function increaser(ctx) {
+  await Bluebird.delay(1000); // wait 1000ms
+  ctx.value = ctx.value + 1;
+  return ctx; // Explicit context return.
+}
 
 const middleware = [log, increaser];
-compose(middleware)({ value: 4 }).then(context => {
-  console.log("Value:", context.value);
-})
+compose(middleware)({ value: 4 })
+  .then(context => {
+    console.log("Value:", context.value);
+  })
+  .catch(err => {
+    console.error(err);
+  });
 ```
 
 ```js
 const composeSync = require("ctx-compose/fp/sync");
 
+function log(ctx, next) {
+  console.log(">>>", ctx.value);
+  const nextCtx = next();
+  console.log("<<<", nextCtx.value);
+  return nextCtx; // Explicit context return.
+}
+
+function increaser(ctx) {
+  ctx.value = ctx.value + 1;
+  return ctx; // Explicit context return.
+}
+
 const middleware = [log, increaser];
-const context = composeSync(middleware)({ value: 4 });
-console.log("Value:", context.value);
+try {
+  const context = composeSync(middleware)({ value: 4 });
+  console.log("Value:", context.value);
+} catch (err) {
+  console.error(err);
+}
+
 ```
 
 ## License

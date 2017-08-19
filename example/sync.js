@@ -14,5 +14,10 @@ function increaser(ctx) {
 
 const context = { value: 4 };
 const middleware = [log, increaser];
-composeSync(middleware)(context);
-console.log("Value:", context.value);
+
+try {
+  composeSync(middleware)(context);
+  console.log("Value:", context.value);
+} catch (err) {
+  console.error(err);
+}

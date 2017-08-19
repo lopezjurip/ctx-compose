@@ -1,3 +1,9 @@
+const {
+  MiddlewareArrayOfFunctionsError,
+  MiddlewareMustBeArrayError,
+  MultipleNextCallsError,
+} = require("./errors");
+
 /**
  * Compose `middleware` returning
  * a fully valid middleware comprised
@@ -10,11 +16,11 @@
 
 module.exports = function composeSync(middleware) {
   if (!Array.isArray(middleware)) {
-    throw new TypeError("Middleware stack must be an array!");
+    throw new MiddlewareMustBeArrayError();
   }
   for (const fn of middleware) {
     if (typeof fn !== "function") {
-      throw new TypeError("Middleware must be composed of functions!");
+      throw new MiddlewareArrayOfFunctionsError();
     }
   }
 
@@ -27,10 +33,10 @@ module.exports = function composeSync(middleware) {
   return function(context, next) {
     // last called middleware #
     let index = -1;
-    return dispatch(0);
+
     function dispatch(i) {
       if (i <= index) {
-        new Error("next() called multiple times");
+        new MultipleNextCallsError();
       }
       index = i;
       let fn = middleware[i];
@@ -42,5 +48,7 @@ module.exports = function composeSync(middleware) {
         return dispatch(i + 1);
       });
     }
+
+    return dispatch(0);
   };
 };
